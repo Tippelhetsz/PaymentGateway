@@ -1,4 +1,4 @@
-package com.checkout.payment.gateway.model;
+package com.checkout.payment.gateway.controller.response;
 
 public class ErrorResponse {
   private final String message;

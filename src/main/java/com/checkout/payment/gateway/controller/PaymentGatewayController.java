@@ -1,22 +1,21 @@
 package com.checkout.payment.gateway.controller;
 
-import com.checkout.payment.gateway.model.PostPaymentRequest;
-import com.checkout.payment.gateway.model.PostPaymentResponse;
+import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
+import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import com.checkout.payment.gateway.service.PaymentGatewayService;
 import java.util.UUID;
+
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController("api")
 @RequestMapping("/v1/payment")
+@AllArgsConstructor
 public class PaymentGatewayController {
 
   private final PaymentGatewayService paymentGatewayService;
-
-  public PaymentGatewayController(PaymentGatewayService paymentGatewayService) {
-    this.paymentGatewayService = paymentGatewayService;
-  }
 
   @GetMapping("/{id}")
   public ResponseEntity<PostPaymentResponse> getPostPaymentEventById(@PathVariable UUID id) {
@@ -25,6 +24,7 @@ public class PaymentGatewayController {
 
   @PostMapping
   public ResponseEntity<PostPaymentResponse> createPostPayment(@RequestBody PostPaymentRequest paymentRequest) {
-    return new ResponseEntity<>(null, HttpStatus.NOT_IMPLEMENTED);
+    final var payment = paymentGatewayService.processPayment(paymentRequest);
+    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
   }
 }

@@ -1,8 +1,8 @@
 package com.checkout.payment.gateway.controller;
 
 import com.checkout.payment.gateway.enums.PaymentStatus;
-import com.checkout.payment.gateway.model.PostPaymentRequest;
-import com.checkout.payment.gateway.model.PostPaymentResponse;
+import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
+import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

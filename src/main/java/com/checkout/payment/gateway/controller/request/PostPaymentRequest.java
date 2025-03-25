@@ -1,4 +1,4 @@
-package com.checkout.payment.gateway.model;
+package com.checkout.payment.gateway.controller.request;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

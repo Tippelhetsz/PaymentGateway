@@ -1,4 +1,4 @@
-package com.checkout.payment.gateway.model;
+package com.checkout.payment.gateway.controller.response;
 
 import com.checkout.payment.gateway.enums.PaymentStatus;
 import java.util.UUID;
