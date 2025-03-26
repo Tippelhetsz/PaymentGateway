@@ -5,22 +5,34 @@ import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
 import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import java.util.stream.Stream;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WireMockTest(httpPort = 8081)
 public class CreatePaymentTest extends PaymentGatewayControllerTest {
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("bankclient.url", () -> "http://localhost:8081");
+    }
 
     @Test
     @SneakyThrows
@@ -34,6 +46,13 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
                 .amount(123)
                 .cvv("123")
                 .build();
+
+        stubFor(WireMock.post(urlMatching("/payments")).
+                willReturn(aResponse()
+                        .withStatus(HttpStatus.OK.value())
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"authorized\": true, \"authorization_code\": \"3c915b87-a3dc-4d3e-b2f7-2b5435f042b4\"}")
+                ));
 
         final var paymentResponse = mvc.perform(post("/v1/payment")
                         .content(objectMapper.writeValueAsString(paymentRequest))
@@ -65,6 +84,13 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
                 .amount(123)
                 .cvv("123")
                 .build();
+
+        stubFor(WireMock.post(urlMatching("/payments")).
+                willReturn(aResponse()
+                        .withStatus(HttpStatus.OK.value())
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"authorized\": false}")
+                ));
 
         final var paymentResponse = mvc.perform(post("/v1/payment")
                         .content(objectMapper.writeValueAsString(paymentRequest))

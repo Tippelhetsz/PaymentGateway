@@ -1,5 +1,7 @@
 package com.checkout.payment.gateway.service;
 
+import com.checkout.payment.gateway.client.bank.BankClient;
+import com.checkout.payment.gateway.client.bank.mapper.BankPaymentMapper;
 import com.checkout.payment.gateway.enums.PaymentState;
 import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.exception.EventProcessingException;
@@ -22,6 +24,8 @@ public class PaymentGatewayService {
 
   private final PaymentsRepository paymentsRepository;
   private final PaymentMapper paymentMapper;
+  private final BankClient bankClient;
+  private final BankPaymentMapper bankPaymentMapper;
 
   public PostPaymentResponse getPaymentById(UUID id) {
     LOG.debug("Requesting access to to payment with ID {}", id);
@@ -31,8 +35,16 @@ public class PaymentGatewayService {
   public PostPaymentResponse processPayment(PostPaymentRequest paymentRequest) {
     var payment = paymentsRepository.save(paymentMapper.mapToDto(paymentRequest));
 
-    // call bank client
+    final var bankResponse = bankClient.sendPaymentToBank(bankPaymentMapper.toRequest(payment));
 
-    return paymentMapper.mapToPaymentResponse(payment);
+    payment = payment.toBuilder()
+            .authorizationCode(bankResponse.authorizationCode())
+            .paymentState(PaymentState.COMPLETED)
+            .status(bankResponse.authorized() ? PaymentStatus.AUTHORIZED : PaymentStatus.DECLINED)
+            .build();
+
+    var updatedPayment = paymentsRepository.save(payment);
+
+    return paymentMapper.mapToPaymentResponse(updatedPayment);
   }
 }
