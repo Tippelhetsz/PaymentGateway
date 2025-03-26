@@ -2,6 +2,7 @@ package com.checkout.payment.gateway.controller;
 
 import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import com.checkout.payment.gateway.enums.PaymentStatus;
+import com.checkout.payment.gateway.model.entity.PaymentEntity;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
@@ -14,26 +15,26 @@ public class GetPaymentTest extends PaymentGatewayControllerTest {
 
     @Test
     void whenPaymentWithIdExistThenCorrectPaymentIsReturned() throws Exception {
-        PostPaymentResponse payment = new PostPaymentResponse(
-                UUID.randomUUID(),
-                PaymentStatus.AUTHORIZED,
-                4321,
-                12,
-                2024,
-                "USD",
-                10
-        );
+        final var paymentEntity = PaymentEntity.builder()
+                .id(UUID.randomUUID())
+                .status(PaymentStatus.AUTHORIZED)
+                .cardNumber("12345678904321")
+                .expiryMonth(12)
+                .expiryYear(2024)
+                .currency("USD")
+                .amount(10)
+                .build();
 
-        paymentsRepository.add(payment);
+        paymentsRepository.add(paymentEntity);
 
-        mvc.perform(MockMvcRequestBuilders.get("/v1/payment/" + payment.id()))
+        mvc.perform(MockMvcRequestBuilders.get("/v1/payment/" + paymentEntity.getId()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value(payment.status().getName()))
-                .andExpect(jsonPath("$.cardNumberLastFour").value(payment.cardNumberLastFour()))
-                .andExpect(jsonPath("$.expiryMonth").value(payment.expiryMonth()))
-                .andExpect(jsonPath("$.expiryYear").value(payment.expiryYear()))
-                .andExpect(jsonPath("$.currency").value(payment.currency()))
-                .andExpect(jsonPath("$.amount").value(payment.amount()));
+                .andExpect(jsonPath("$.status").value(paymentEntity.getStatus().getName()))
+                .andExpect(jsonPath("$.cardNumberLastFour").value(4321))
+                .andExpect(jsonPath("$.expiryMonth").value(paymentEntity.getExpiryMonth()))
+                .andExpect(jsonPath("$.expiryYear").value(paymentEntity.getExpiryYear()))
+                .andExpect(jsonPath("$.currency").value(paymentEntity.getCurrency()))
+                .andExpect(jsonPath("$.amount").value(paymentEntity.getAmount()));
     }
 
     @Test

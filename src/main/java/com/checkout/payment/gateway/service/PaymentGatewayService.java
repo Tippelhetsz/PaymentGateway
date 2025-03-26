@@ -3,6 +3,7 @@ package com.checkout.payment.gateway.service;
 import com.checkout.payment.gateway.exception.EventProcessingException;
 import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
 import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
+import com.checkout.payment.gateway.mapper.PaymentMapper;
 import com.checkout.payment.gateway.repository.PaymentsRepository;
 import java.util.UUID;
 
@@ -18,10 +19,11 @@ public class PaymentGatewayService {
   private static final Logger LOG = LoggerFactory.getLogger(PaymentGatewayService.class);
 
   private final PaymentsRepository paymentsRepository;
+  private final PaymentMapper paymentMapper;
 
   public PostPaymentResponse getPaymentById(UUID id) {
     LOG.debug("Requesting access to to payment with ID {}", id);
-    return paymentsRepository.get(id).orElseThrow(() -> new EventProcessingException("Invalid ID"));
+    return paymentMapper.mapToPaymentResponse(paymentsRepository.get(id));
   }
 
   public UUID processPayment(PostPaymentRequest paymentRequest) {
