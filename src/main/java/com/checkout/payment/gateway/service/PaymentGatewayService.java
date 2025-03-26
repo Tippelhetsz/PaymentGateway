@@ -1,5 +1,7 @@
 package com.checkout.payment.gateway.service;
 
+import com.checkout.payment.gateway.enums.PaymentState;
+import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.exception.EventProcessingException;
 import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
 import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
@@ -26,7 +28,11 @@ public class PaymentGatewayService {
     return paymentMapper.mapToPaymentResponse(paymentsRepository.get(id));
   }
 
-  public UUID processPayment(PostPaymentRequest paymentRequest) {
-    return UUID.randomUUID();
+  public PostPaymentResponse processPayment(PostPaymentRequest paymentRequest) {
+    var payment = paymentsRepository.save(paymentMapper.mapToDto(paymentRequest));
+
+    // call bank client
+
+    return paymentMapper.mapToPaymentResponse(payment);
   }
 }

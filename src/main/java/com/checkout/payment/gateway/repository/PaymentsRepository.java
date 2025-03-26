@@ -28,4 +28,10 @@ public class PaymentsRepository {
             .orElseThrow(() -> new EventProcessingException("Invalid ID")));
   }
 
+  public PaymentDto save(PaymentDto payment) {
+    final var newPaymentEntity = paymentMapper.mapToEntity(payment);
+    payments.put(newPaymentEntity.getId(), newPaymentEntity);
+
+    return paymentMapper.mapToDto(newPaymentEntity);
+  }
 }

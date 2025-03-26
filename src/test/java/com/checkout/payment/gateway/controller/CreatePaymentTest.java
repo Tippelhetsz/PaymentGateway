@@ -89,14 +89,12 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @SneakyThrows
     @DisplayName("Should return rejected response when request is invalid")
     void shouldReturnRejectedResponseWhenRequestIsInvalid(String paymentRequest) {
-        final var response = mvc.perform(post("/v1/payment")
+        mvc.perform(post("/v1/payment")
                         .content(paymentRequest)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andReturn().getResponse().getContentAsString();
-
-        System.out.println(response);
     }
 
     @SneakyThrows

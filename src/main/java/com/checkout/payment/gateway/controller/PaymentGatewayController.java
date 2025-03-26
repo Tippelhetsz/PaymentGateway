@@ -26,6 +26,6 @@ public class PaymentGatewayController {
   @PostMapping
   public ResponseEntity<PostPaymentResponse> createPostPayment(@Valid @RequestBody PostPaymentRequest paymentRequest) {
     final var payment = paymentGatewayService.processPayment(paymentRequest);
-    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
+    return ResponseEntity.status(HttpStatus.CREATED).body(payment);
   }
 }
