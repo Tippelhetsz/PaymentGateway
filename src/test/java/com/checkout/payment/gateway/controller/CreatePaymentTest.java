@@ -3,6 +3,8 @@ package com.checkout.payment.gateway.controller;
 import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
 import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -25,12 +27,12 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @DisplayName("Should successfully create authorized payment")
     void shouldSuccessfullyCreateAuthorizedPayment() {
         final PostPaymentRequest paymentRequest = PostPaymentRequest.builder()
-                .cardNumberLastFour(1235)
+                .cardNumber("123456789101113")
                 .expiryMonth(12)
                 .expiryYear(2025)
                 .currency("USD")
                 .amount(123)
-                .cvv(123)
+                .cvv("123")
                 .build();
 
         final var paymentResponse = mvc.perform(post("/v1/payment")
@@ -42,7 +44,7 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
 
         final var payment = objectMapper.readValue(paymentResponse, PostPaymentResponse.class);
         assertAll(
-                () -> assertEquals(1235, payment.cardNumberLastFour()),
+                () -> assertEquals(1113, payment.cardNumberLastFour()),
                 () -> assertEquals(paymentRequest.getExpiryMonth(), payment.expiryMonth()),
                 () -> assertEquals(paymentRequest.getExpiryYear(), payment.expiryYear()),
                 () -> assertEquals(paymentRequest.getCurrency(), payment.currency()),
@@ -56,12 +58,12 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @DisplayName("Should successfully create unauthorized payment")
     void shouldSuccessfullyCreateUnauthorizedPayment() {
         final PostPaymentRequest paymentRequest = PostPaymentRequest.builder()
-                .cardNumberLastFour(1234)
+                .cardNumber("123456789101112")
                 .expiryMonth(12)
                 .expiryYear(2025)
                 .currency("USD")
                 .amount(123)
-                .cvv(123)
+                .cvv("123")
                 .build();
 
         final var paymentResponse = mvc.perform(post("/v1/payment")
@@ -73,7 +75,7 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
 
         final var payment = objectMapper.readValue(paymentResponse, PostPaymentResponse.class);
         assertAll(
-                () -> assertEquals(1234, payment.cardNumberLastFour()),
+                () -> assertEquals(1112, payment.cardNumberLastFour()),
                 () -> assertEquals(paymentRequest.getExpiryMonth(), payment.expiryMonth()),
                 () -> assertEquals(paymentRequest.getExpiryYear(), payment.expiryYear()),
                 () -> assertEquals(paymentRequest.getCurrency(), payment.currency()),
@@ -86,32 +88,40 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @MethodSource("invalidPaymentRequests")
     @SneakyThrows
     @DisplayName("Should return rejected response when request is invalid")
-    void shouldReturnRejectedResponseWhenRequestIsInvalid(PostPaymentRequest paymentRequest) {
-        mvc.perform(post("/v1/payment")
-                        .content(objectMapper.writeValueAsString(paymentRequest))
+    void shouldReturnRejectedResponseWhenRequestIsInvalid(String paymentRequest) {
+        final var response = mvc.perform(post("/v1/payment")
+                        .content(paymentRequest)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andReturn().getResponse().getContentAsString();
+
+        System.out.println(response);
     }
 
+    @SneakyThrows
     private static Stream<Arguments> invalidPaymentRequests() {
+        ObjectMapper objMapper = new ObjectMapper();
+        objMapper.registerModule(new JavaTimeModule());
+        final String incorrectExpiryDate = "{\"currency\":\"USD\",\"amount\":123,\"cvv\":\"123\",\"card_number\":\"123\",\"expiry_month\":13,\"expiry_year\":2025,\"expiry_date\":\"2025-13-01\"}";
+
         PostPaymentRequest paymentRequest = PostPaymentRequest.builder()
-                .cardNumberLastFour(1234)
+                .cardNumber("123456789101113")
                 .expiryMonth(12)
                 .expiryYear(2025)
                 .currency("USD")
                 .amount(123)
-                .cvv(123)
+                .cvv("123")
                 .build();
 
         return Stream.of(
-                Arguments.of(paymentRequest.toBuilder().cardNumberLastFour(123).build()),
-                Arguments.of(paymentRequest.toBuilder().expiryMonth(13).build()),
-                Arguments.of(paymentRequest.toBuilder().expiryYear(2024).build()),
-                Arguments.of(paymentRequest.toBuilder().currency("AUD").build()),
-                Arguments.of(paymentRequest.toBuilder().cvv(12).build()),
-                Arguments.of(paymentRequest.toBuilder().cvv(12345).build())
+                Arguments.of(objMapper.writeValueAsString(paymentRequest.toBuilder().cardNumber("123").build())),
+                Arguments.of(incorrectExpiryDate),
+                Arguments.of(objMapper.writeValueAsString(paymentRequest.toBuilder().expiryYear(2024).build())),
+                Arguments.of(objMapper.writeValueAsString(paymentRequest.toBuilder().currency("AUD").build())),
+                Arguments.of(objMapper.writeValueAsString(paymentRequest.toBuilder().cvv("12").build())),
+                Arguments.of(objMapper.writeValueAsString(paymentRequest.toBuilder().cvv("12345").build())),
+                Arguments.of(objMapper.writeValueAsString(paymentRequest.toBuilder().cardNumber("123").currency("AUD").cvv("12").build()))
         );
     }
 }

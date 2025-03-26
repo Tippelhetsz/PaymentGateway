@@ -5,6 +5,7 @@ import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import com.checkout.payment.gateway.service.PaymentGatewayService;
 import java.util.UUID;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,7 +24,7 @@ public class PaymentGatewayController {
   }
 
   @PostMapping
-  public ResponseEntity<PostPaymentResponse> createPostPayment(@RequestBody PostPaymentRequest paymentRequest) {
+  public ResponseEntity<PostPaymentResponse> createPostPayment(@Valid @RequestBody PostPaymentRequest paymentRequest) {
     final var payment = paymentGatewayService.processPayment(paymentRequest);
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(null);
   }
