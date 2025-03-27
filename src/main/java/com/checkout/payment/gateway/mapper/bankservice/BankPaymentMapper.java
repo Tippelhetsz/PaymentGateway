@@ -1,4 +1,4 @@
-package com.checkout.payment.gateway.client.bank.mapper;
+package com.checkout.payment.gateway.mapper.bankservice;
 
 import com.checkout.payment.gateway.client.bank.request.BankPaymentRequest;
 import com.checkout.payment.gateway.model.dto.PaymentDto;

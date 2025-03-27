@@ -1,22 +1,21 @@
 package com.checkout.payment.gateway.service;
 
 import com.checkout.payment.gateway.client.bank.BankClient;
-import com.checkout.payment.gateway.client.bank.mapper.BankPaymentMapper;
+import com.checkout.payment.gateway.mapper.bankservice.BankPaymentMapper;
+import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
+import com.checkout.payment.gateway.controller.response.PaymentResponse;
 import com.checkout.payment.gateway.enums.PaymentState;
 import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.exception.BankClientException;
-import com.checkout.payment.gateway.exception.EventProcessingException;
-import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
-import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import com.checkout.payment.gateway.mapper.PaymentMapper;
 import com.checkout.payment.gateway.model.dto.PaymentDto;
 import com.checkout.payment.gateway.repository.PaymentsRepository;
-import java.util.UUID;
-
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -29,12 +28,12 @@ public class PaymentGatewayService {
   private final BankClient bankClient;
   private final BankPaymentMapper bankPaymentMapper;
 
-  public PostPaymentResponse getPaymentById(UUID id) {
+  public PaymentResponse getPaymentById(UUID id) {
     LOG.debug("Requesting access to to payment with ID {}", id);
     return paymentMapper.mapToPaymentResponse(paymentsRepository.get(id));
   }
 
-  public PostPaymentResponse processPayment(PostPaymentRequest paymentRequest) {
+  public PaymentResponse processPayment(PostPaymentRequest paymentRequest) {
     var payment = paymentsRepository.save(paymentMapper.mapToDto(paymentRequest));
 
     var updatedPayment = sendTransactionAndUpdatePayment(payment);
@@ -54,8 +53,6 @@ public class PaymentGatewayService {
 
       return paymentsRepository.save(payment);
     } catch (BankClientException exception) {
-      LOG.error(exception.getMessage());
-
       payment = payment.toBuilder()
               .paymentState(PaymentState.FAILED)
               .build();

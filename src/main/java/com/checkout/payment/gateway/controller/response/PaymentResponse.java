@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.UUID;
 
-public record PostPaymentResponse (
+public record PaymentResponse(
         UUID id,
         PaymentStatus status,
         @JsonProperty("card_number_last_four") int cardNumberLastFour,

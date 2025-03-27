@@ -6,7 +6,8 @@ import lombok.AllArgsConstructor;
 public enum ErrorStatus {
   REJECTED("Rejected"),
   NOT_FOUND("Not found"),
-  BANK_UNAVAILABLE("Bank unavailable");
+  BANK_UNAVAILABLE("Bank unavailable"),
+  SERVER_ERROR("Server error");
 
   private final String name;
 }

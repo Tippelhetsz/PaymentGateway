@@ -1,13 +1,12 @@
 package com.checkout.payment.gateway.controller;
 
+import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
 import com.checkout.payment.gateway.controller.response.ErrorResponse;
+import com.checkout.payment.gateway.controller.response.PaymentResponse;
 import com.checkout.payment.gateway.enums.ErrorStatus;
 import com.checkout.payment.gateway.enums.PaymentStatus;
-import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
-import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.DisplayName;
@@ -16,16 +15,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import java.util.stream.Stream;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WireMockTest(httpPort = 8081)
@@ -40,30 +36,15 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @SneakyThrows
     @DisplayName("Should successfully create authorized payment")
     void shouldSuccessfullyCreateAuthorizedPayment() {
-        final PostPaymentRequest paymentRequest = PostPaymentRequest.builder()
-                .cardNumber("123456789101113")
-                .expiryMonth(12)
-                .expiryYear(2025)
-                .currency("USD")
-                .amount(123)
-                .cvv("123")
-                .build();
+        final PostPaymentRequest paymentRequest = createPaymentRequest("123456789101113");
+        final String clientResponse = "{\"authorized\": true, \"authorization_code\": \"3c915b87-a3dc-4d3e-b2f7-2b5435f042b4\"}";
 
-        stubFor(WireMock.post(urlMatching("/payments")).
-                willReturn(aResponse()
-                        .withStatus(HttpStatus.OK.value())
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"authorized\": true, \"authorization_code\": \"3c915b87-a3dc-4d3e-b2f7-2b5435f042b4\"}")
-                ));
+        stubBankClient(HttpStatus.OK, clientResponse);
 
-        final var paymentResponse = mvc.perform(post("/v1/payment")
-                        .content(objectMapper.writeValueAsString(paymentRequest))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        final var paymentResponse = performPostRequest(objectMapper.writeValueAsString(paymentRequest),
+                status().isCreated());
 
-        final var payment = objectMapper.readValue(paymentResponse, PostPaymentResponse.class);
+        final var payment = objectMapper.readValue(paymentResponse, PaymentResponse.class);
         assertAll(
                 () -> assertEquals(1113, payment.cardNumberLastFour()),
                 () -> assertEquals(paymentRequest.getExpiryMonth(), payment.expiryMonth()),
@@ -78,30 +59,15 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @SneakyThrows
     @DisplayName("Should successfully create unauthorized payment")
     void shouldSuccessfullyCreateUnauthorizedPayment() {
-        final PostPaymentRequest paymentRequest = PostPaymentRequest.builder()
-                .cardNumber("123456789101112")
-                .expiryMonth(12)
-                .expiryYear(2025)
-                .currency("USD")
-                .amount(123)
-                .cvv("123")
-                .build();
+        final PostPaymentRequest paymentRequest = createPaymentRequest("123456789101112");
+        final String clientResponse = "{\"authorized\": false}";
 
-        stubFor(WireMock.post(urlMatching("/payments")).
-                willReturn(aResponse()
-                        .withStatus(HttpStatus.OK.value())
-                        .withHeader("Content-Type", "application/json")
-                        .withBody("{\"authorized\": false}")
-                ));
+        stubBankClient(HttpStatus.OK, clientResponse);
 
-        final var paymentResponse = mvc.perform(post("/v1/payment")
-                        .content(objectMapper.writeValueAsString(paymentRequest))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
-                .andReturn().getResponse().getContentAsString();
+        final var paymentResponse = performPostRequest(objectMapper.writeValueAsString(paymentRequest),
+                status().isCreated());
 
-        final var payment = objectMapper.readValue(paymentResponse, PostPaymentResponse.class);
+        final var payment = objectMapper.readValue(paymentResponse, PaymentResponse.class);
         assertAll(
                 () -> assertEquals(1112, payment.cardNumberLastFour()),
                 () -> assertEquals(paymentRequest.getExpiryMonth(), payment.expiryMonth()),
@@ -117,19 +83,14 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @SneakyThrows
     @DisplayName("Should return rejected response when request is invalid")
     void shouldReturnRejectedResponseWhenRequestIsInvalid(String paymentRequest) {
-        final var response = mvc.perform(post("/v1/payment")
-                        .content(paymentRequest)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnprocessableEntity())
-                .andReturn().getResponse().getContentAsString();
+        final var response = performPostRequest(paymentRequest, status().isUnprocessableEntity());
 
         final var errorResponse = objectMapper.readValue(response, ErrorResponse.class);
 
         assertAll(
-                () -> assertEquals(ErrorStatus.REJECTED, errorResponse.getErrorStatus()),
-                () -> assertEquals(HttpStatus.UNPROCESSABLE_ENTITY.value(), errorResponse.getErrorCode()),
-                () -> assertEquals("Request rejected", errorResponse.getMessage())
+                () -> assertEquals(ErrorStatus.REJECTED, errorResponse.errorStatus()),
+                () -> assertEquals(HttpStatus.UNPROCESSABLE_ENTITY.value(), errorResponse.errorCode()),
+                () -> assertEquals("Request rejected", errorResponse.message())
         );
     }
 
@@ -137,33 +98,18 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @SneakyThrows
     @DisplayName("Should return BAD_GATEWAY when call to bank client fails")
     void shouldReturnBadGatewayWhenBankClientFails() {
-        final PostPaymentRequest paymentRequest = PostPaymentRequest.builder()
-                .cardNumber("123456789101110")
-                .expiryMonth(12)
-                .expiryYear(2025)
-                .currency("USD")
-                .amount(123)
-                .cvv("123")
-                .build();
+        final PostPaymentRequest paymentRequest = createPaymentRequest("123456789101110");
 
-        stubFor(WireMock.post(urlMatching("/payments")).
-                willReturn(aResponse()
-                        .withStatus(HttpStatus.SERVICE_UNAVAILABLE.value())
-                        .withHeader("Content-Type", "application/json")
-                ));
+        stubBankClient(HttpStatus.SERVICE_UNAVAILABLE, null);
 
-        final var response = mvc.perform(post("/v1/payment")
-                        .content(objectMapper.writeValueAsString(paymentRequest))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadGateway())
-                .andReturn().getResponse().getContentAsString();
+        final var response = performPostRequest(objectMapper.writeValueAsString(paymentRequest),
+                status().isBadGateway());
 
         final var errorResponse = objectMapper.readValue(response, ErrorResponse.class);
         assertAll(
-                () -> assertEquals(ErrorStatus.BANK_UNAVAILABLE, errorResponse.getErrorStatus()),
-                () -> assertEquals(HttpStatus.BAD_GATEWAY.value(), errorResponse.getErrorCode()),
-                () -> assertEquals("Transaction failed", errorResponse.getMessage())
+                () -> assertEquals(ErrorStatus.BANK_UNAVAILABLE, errorResponse.errorStatus()),
+                () -> assertEquals(HttpStatus.BAD_GATEWAY.value(), errorResponse.errorCode()),
+                () -> assertEquals("Transaction failed", errorResponse.message())
         );
     }
 

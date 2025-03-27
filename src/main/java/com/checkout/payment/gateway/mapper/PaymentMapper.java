@@ -2,7 +2,7 @@ package com.checkout.payment.gateway.mapper;
 
 import com.checkout.payment.gateway.enums.PaymentState;
 import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
-import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
+import com.checkout.payment.gateway.controller.response.PaymentResponse;
 import com.checkout.payment.gateway.model.dto.PaymentDto;
 import com.checkout.payment.gateway.model.entity.PaymentEntity;
 import org.springframework.stereotype.Component;
@@ -55,8 +55,8 @@ public class PaymentMapper {
         .build();
   }
 
-  public PostPaymentResponse mapToPaymentResponse(PaymentDto paymentDto) {
-    return new PostPaymentResponse(
+  public PaymentResponse mapToPaymentResponse(PaymentDto paymentDto) {
+    return new PaymentResponse(
         paymentDto.getId(),
         paymentDto.getStatus(),
         Integer.parseInt(paymentDto.getCardNumber().substring(paymentDto.getCardNumber().length() - 4)),

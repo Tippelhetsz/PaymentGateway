@@ -1,19 +1,15 @@
 package com.checkout.payment.gateway.controller.response;
 
 import com.checkout.payment.gateway.enums.ErrorStatus;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
-@Data
-@AllArgsConstructor
-public class ErrorResponse {
-
-  private final ErrorStatus errorStatus;
-  private final int errorCode;
-  private final String message;
-  private final List<String> errors;
+public record ErrorResponse(
+        @JsonProperty("error_status")ErrorStatus errorStatus,
+        @JsonProperty("error_code")int errorCode,
+        String message,
+        List<String> errors) {
 
   @Override
   public String toString() {

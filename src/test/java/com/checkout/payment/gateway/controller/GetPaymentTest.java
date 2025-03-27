@@ -1,6 +1,5 @@
 package com.checkout.payment.gateway.controller;
 
-import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.model.entity.PaymentEntity;
 import org.junit.jupiter.api.Test;
@@ -41,8 +40,8 @@ public class GetPaymentTest extends PaymentGatewayControllerTest {
     void whenPaymentWithIdDoesNotExistThen404IsReturned() throws Exception {
         mvc.perform(MockMvcRequestBuilders.get("/v1/payment/" + UUID.randomUUID()))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorStatus").value("NOT_FOUND"))
-                .andExpect(jsonPath("$.errorCode").value(404))
+                .andExpect(jsonPath("$.error_status").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.error_code").value(404))
                 .andExpect(jsonPath("$.message").value("Invalid ID"));
     }
 }
