@@ -30,9 +30,9 @@ public class GetPaymentTest extends PaymentGatewayControllerTest {
         mvc.perform(MockMvcRequestBuilders.get("/v1/payment/" + paymentEntity.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value(paymentEntity.getStatus().getName()))
-                .andExpect(jsonPath("$.cardNumberLastFour").value(4321))
-                .andExpect(jsonPath("$.expiryMonth").value(paymentEntity.getExpiryMonth()))
-                .andExpect(jsonPath("$.expiryYear").value(paymentEntity.getExpiryYear()))
+                .andExpect(jsonPath("$.card_number_last_four").value(4321))
+                .andExpect(jsonPath("$.expiry_month").value(paymentEntity.getExpiryMonth()))
+                .andExpect(jsonPath("$.expiry_year").value(paymentEntity.getExpiryYear()))
                 .andExpect(jsonPath("$.currency").value(paymentEntity.getCurrency()))
                 .andExpect(jsonPath("$.amount").value(paymentEntity.getAmount()));
     }
@@ -41,6 +41,8 @@ public class GetPaymentTest extends PaymentGatewayControllerTest {
     void whenPaymentWithIdDoesNotExistThen404IsReturned() throws Exception {
         mvc.perform(MockMvcRequestBuilders.get("/v1/payment/" + UUID.randomUUID()))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.message").value("Page not found"));
+                .andExpect(jsonPath("$.errorStatus").value("NOT_FOUND"))
+                .andExpect(jsonPath("$.errorCode").value(404))
+                .andExpect(jsonPath("$.message").value("Invalid ID"));
     }
 }

@@ -4,10 +4,12 @@ import com.checkout.payment.gateway.client.bank.BankClient;
 import com.checkout.payment.gateway.client.bank.mapper.BankPaymentMapper;
 import com.checkout.payment.gateway.enums.PaymentState;
 import com.checkout.payment.gateway.enums.PaymentStatus;
+import com.checkout.payment.gateway.exception.BankClientException;
 import com.checkout.payment.gateway.exception.EventProcessingException;
 import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
 import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
 import com.checkout.payment.gateway.mapper.PaymentMapper;
+import com.checkout.payment.gateway.model.dto.PaymentDto;
 import com.checkout.payment.gateway.repository.PaymentsRepository;
 import java.util.UUID;
 
@@ -35,16 +37,32 @@ public class PaymentGatewayService {
   public PostPaymentResponse processPayment(PostPaymentRequest paymentRequest) {
     var payment = paymentsRepository.save(paymentMapper.mapToDto(paymentRequest));
 
-    final var bankResponse = bankClient.sendPaymentToBank(bankPaymentMapper.toRequest(payment));
-
-    payment = payment.toBuilder()
-            .authorizationCode(bankResponse.authorizationCode())
-            .paymentState(PaymentState.COMPLETED)
-            .status(bankResponse.authorized() ? PaymentStatus.AUTHORIZED : PaymentStatus.DECLINED)
-            .build();
-
-    var updatedPayment = paymentsRepository.save(payment);
+    var updatedPayment = sendTransactionAndUpdatePayment(payment);
 
     return paymentMapper.mapToPaymentResponse(updatedPayment);
+  }
+
+  private PaymentDto sendTransactionAndUpdatePayment(PaymentDto payment) {
+    try {
+      final var bankResponse = bankClient.sendPaymentToBank(bankPaymentMapper.toRequest(payment));
+
+      payment = payment.toBuilder()
+              .authorizationCode(bankResponse.authorizationCode())
+              .paymentState(PaymentState.COMPLETED)
+              .status(bankResponse.authorized() ? PaymentStatus.AUTHORIZED : PaymentStatus.DECLINED)
+              .build();
+
+      return paymentsRepository.save(payment);
+    } catch (BankClientException exception) {
+      LOG.error(exception.getMessage());
+
+      payment = payment.toBuilder()
+              .paymentState(PaymentState.FAILED)
+              .build();
+
+      paymentsRepository.save(payment);
+
+      throw exception;
+    }
   }
 }

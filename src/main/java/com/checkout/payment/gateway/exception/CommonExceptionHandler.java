@@ -1,6 +1,7 @@
 package com.checkout.payment.gateway.exception;
 
 import com.checkout.payment.gateway.controller.response.ErrorResponse;
+import com.checkout.payment.gateway.enums.ErrorStatus;
 import jakarta.validation.ValidationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,29 +23,52 @@ public class CommonExceptionHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(CommonExceptionHandler.class);
 
-  @ExceptionHandler(EventProcessingException.class)
-  public ResponseEntity<ErrorResponse> handleException(EventProcessingException ex) {
+  @ExceptionHandler
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public @ResponseBody ErrorResponse handleException(EventProcessingException ex) {
     LOG.error("Exception happened", ex);
-    return new ResponseEntity<>(new ErrorResponse("Page not found"),
-        HttpStatus.NOT_FOUND);
+    return buildErrorResponse(
+            ErrorStatus.NOT_FOUND,
+            HttpStatus.NOT_FOUND.value(),
+            ex.getMessage(),
+            List.of(ex.getMessage()));
   }
 
   @ExceptionHandler
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
   public @ResponseBody ErrorResponse handleInvalidDateException(ValidationException exception) {
-    return new ErrorResponse("Expiry date is required and must be valid");
+    return buildErrorResponse(
+            ErrorStatus.REJECTED,
+            HttpStatus.UNPROCESSABLE_ENTITY.value(),
+            "Request rejected",
+            List.of("Expiry date is required and must be valid"));
   }
 
   @ExceptionHandler
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
   public @ResponseBody ErrorResponse handleInvalidRequestException(MethodArgumentNotValidException exception) {
     List<String> errors = new ArrayList<>();
 
     exception.getAllErrors().forEach(err -> errors.add(err.getDefaultMessage()));
 
-    Map<String, List<String>> result = new HashMap<>();
-    result.put("errors", errors);
+    return buildErrorResponse(
+            ErrorStatus.REJECTED,
+            HttpStatus.UNPROCESSABLE_ENTITY.value(),
+            "Request rejected",
+            errors);
+  }
 
-    return new ErrorResponse(result.toString());
+  @ExceptionHandler
+  @ResponseStatus(HttpStatus.BAD_GATEWAY)
+  public @ResponseBody ErrorResponse handleBankClientException(BankClientException exception) {
+    return buildErrorResponse(
+            ErrorStatus.BANK_UNAVAILABLE,
+            HttpStatus.BAD_GATEWAY.value(),
+            exception.getMessage(),
+            List.of("Bank transaction failed"));
+  }
+
+  private ErrorResponse buildErrorResponse(ErrorStatus errorStatus, int statusCode, String message, List<String> errors) {
+    return new ErrorResponse(errorStatus, statusCode, message, errors);
   }
 }

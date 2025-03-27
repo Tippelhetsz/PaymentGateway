@@ -1,5 +1,7 @@
 package com.checkout.payment.gateway.controller;
 
+import com.checkout.payment.gateway.controller.response.ErrorResponse;
+import com.checkout.payment.gateway.enums.ErrorStatus;
 import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.checkout.payment.gateway.controller.request.PostPaymentRequest;
 import com.checkout.payment.gateway.controller.response.PostPaymentResponse;
@@ -115,12 +117,54 @@ public class CreatePaymentTest extends PaymentGatewayControllerTest {
     @SneakyThrows
     @DisplayName("Should return rejected response when request is invalid")
     void shouldReturnRejectedResponseWhenRequestIsInvalid(String paymentRequest) {
-        mvc.perform(post("/v1/payment")
+        final var response = mvc.perform(post("/v1/payment")
                         .content(paymentRequest)
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andReturn().getResponse().getContentAsString();
+
+        final var errorResponse = objectMapper.readValue(response, ErrorResponse.class);
+
+        assertAll(
+                () -> assertEquals(ErrorStatus.REJECTED, errorResponse.getErrorStatus()),
+                () -> assertEquals(HttpStatus.UNPROCESSABLE_ENTITY.value(), errorResponse.getErrorCode()),
+                () -> assertEquals("Request rejected", errorResponse.getMessage())
+        );
+    }
+
+    @Test
+    @SneakyThrows
+    @DisplayName("Should return BAD_GATEWAY when call to bank client fails")
+    void shouldReturnBadGatewayWhenBankClientFails() {
+        final PostPaymentRequest paymentRequest = PostPaymentRequest.builder()
+                .cardNumber("123456789101110")
+                .expiryMonth(12)
+                .expiryYear(2025)
+                .currency("USD")
+                .amount(123)
+                .cvv("123")
+                .build();
+
+        stubFor(WireMock.post(urlMatching("/payments")).
+                willReturn(aResponse()
+                        .withStatus(HttpStatus.SERVICE_UNAVAILABLE.value())
+                        .withHeader("Content-Type", "application/json")
+                ));
+
+        final var response = mvc.perform(post("/v1/payment")
+                        .content(objectMapper.writeValueAsString(paymentRequest))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadGateway())
+                .andReturn().getResponse().getContentAsString();
+
+        final var errorResponse = objectMapper.readValue(response, ErrorResponse.class);
+        assertAll(
+                () -> assertEquals(ErrorStatus.BANK_UNAVAILABLE, errorResponse.getErrorStatus()),
+                () -> assertEquals(HttpStatus.BAD_GATEWAY.value(), errorResponse.getErrorCode()),
+                () -> assertEquals("Transaction failed", errorResponse.getMessage())
+        );
     }
 
     @SneakyThrows
