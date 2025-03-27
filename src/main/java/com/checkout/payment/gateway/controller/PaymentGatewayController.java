@@ -18,21 +18,21 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class PaymentGatewayController {
 
-  private final PaymentGatewayService paymentGatewayService;
+    private final PaymentGatewayService paymentGatewayService;
 
-  @GetMapping("/{id}")
-  public ResponseEntity<PaymentResponse> getPostPaymentEventById(@PathVariable UUID id) {
-    return ResponseEntity.ok(paymentGatewayService.getPaymentById(id));
-  }
+    @GetMapping("/{id}")
+    public ResponseEntity<PaymentResponse> getPostPaymentEventById(@PathVariable UUID id) {
+        return ResponseEntity.ok(paymentGatewayService.getPaymentById(id));
+    }
 
-  @GetMapping
-  public ResponseEntity<List<PaymentResponse>> getAllPostPaymentEvent() {
-    return ResponseEntity.ok(paymentGatewayService.getAllPayments());
-  }
+    @GetMapping
+    public ResponseEntity<List<PaymentResponse>> getAllPostPaymentEvent() {
+        return ResponseEntity.ok(paymentGatewayService.getAllPayments());
+    }
 
-  @PostMapping
-  public ResponseEntity<PaymentResponse> createPostPayment(@Valid @RequestBody PostPaymentRequest paymentRequest) {
-    final var payment = paymentGatewayService.processPayment(paymentRequest);
-    return ResponseEntity.status(HttpStatus.CREATED).body(payment);
-  }
+    @PostMapping
+    public ResponseEntity<PaymentResponse> createPostPayment(@Valid @RequestBody PostPaymentRequest paymentRequest) {
+        final var payment = paymentGatewayService.processPayment(paymentRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(payment);
+    }
 }

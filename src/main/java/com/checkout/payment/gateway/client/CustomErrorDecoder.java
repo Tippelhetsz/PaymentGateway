@@ -10,7 +10,7 @@ public class CustomErrorDecoder implements ErrorDecoder {
 
   @Override
   public Exception decode(String methodKey, Response response) {
-    if (response.status() >=  500) {
+    if (response.status() >= 500) {
       return new BankClientException("Transaction failed");
     }
 

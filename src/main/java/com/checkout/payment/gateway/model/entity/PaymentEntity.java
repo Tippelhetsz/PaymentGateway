@@ -11,15 +11,15 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 public class PaymentEntity {
 
-    private UUID id;
-    private PaymentStatus status;
-    private PaymentState paymentState;
-    private String cardNumber;
-    private int expiryMonth;
-    private int expiryYear;
-    private String currency;
-    private int amount;
-    private String cvv;
-    private UUID authorizationCode;
+  private UUID id;
+  private PaymentStatus status;
+  private PaymentState paymentState;
+  private String cardNumber;
+  private int expiryMonth;
+  private int expiryYear;
+  private String currency;
+  private int amount;
+  private String cvv;
+  private UUID authorizationCode;
 
 }

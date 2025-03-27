@@ -76,7 +76,8 @@ public class GetPaymentTest extends PaymentGatewayControllerTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        final var paymentList = objectMapper.readValue(paymentResponse, new TypeReference<List<PaymentResponse>>() {});
+        final var paymentList = objectMapper.readValue(paymentResponse, new TypeReference<List<PaymentResponse>>() {
+        });
 
         assertEquals(5, paymentList.size());
     }

@@ -10,5 +10,6 @@ public record BankPaymentRequest(
     String currency,
     int amount,
     String cvv
-)
-{ }
+) {
+
+}

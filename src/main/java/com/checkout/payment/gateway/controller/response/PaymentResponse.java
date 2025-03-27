@@ -15,18 +15,17 @@ public record PaymentResponse(
         @JsonProperty("expiry_year") int expiryYear,
         String currency,
         int amount
-)
-{
-  @Override
-  public String toString() {
-    return "GetPaymentResponse{" +
-            "id=" + id +
-            ", status=" + status +
-            ", cardNumberLastFour=" + cardNumberLastFour +
-            ", expiryMonth=" + expiryMonth +
-            ", expiryYear=" + expiryYear +
-            ", currency='" + currency + '\'' +
-            ", amount=" + amount +
-            '}';
-  }
+) {
+    @Override
+    public String toString() {
+        return "GetPaymentResponse{" +
+                "id=" + id +
+                ", status=" + status +
+                ", cardNumberLastFour=" + cardNumberLastFour +
+                ", expiryMonth=" + expiryMonth +
+                ", expiryYear=" + expiryYear +
+                ", currency='" + currency + '\'' +
+                ", amount=" + amount +
+                '}';
+    }
 }

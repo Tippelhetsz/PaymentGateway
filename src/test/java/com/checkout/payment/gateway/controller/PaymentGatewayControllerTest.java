@@ -5,6 +5,7 @@ import com.checkout.payment.gateway.repository.PaymentsRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import lombok.SneakyThrows;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,31 +31,31 @@ class PaymentGatewayControllerTest {
 
   public PostPaymentRequest createPaymentRequest(String cardNumber) {
     return PostPaymentRequest.builder()
-            .cardNumber(cardNumber)
-            .expiryMonth(12)
-            .expiryYear(2025)
-            .currency("USD")
-            .amount(123)
-            .cvv("123")
-            .build();
+        .cardNumber(cardNumber)
+        .expiryMonth(12)
+        .expiryYear(2025)
+        .currency("USD")
+        .amount(123)
+        .cvv("123")
+        .build();
   }
 
   public void stubBankClient(HttpStatus status, String response) {
     stubFor(WireMock.post(urlMatching("/payments")).
-            willReturn(aResponse()
-                    .withStatus(status.value())
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(response)
-            ));
+        willReturn(aResponse()
+            .withStatus(status.value())
+            .withHeader("Content-Type", "application/json")
+            .withBody(response)
+        ));
   }
 
   @SneakyThrows
   public String performPostRequest(String paymentRequest, ResultMatcher resultMatcher) {
     return mvc.perform(post("/v1/payment")
-                    .content(paymentRequest)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .accept(MediaType.APPLICATION_JSON))
-            .andExpect(resultMatcher)
-            .andReturn().getResponse().getContentAsString();
+            .content(paymentRequest)
+            .contentType(MediaType.APPLICATION_JSON)
+            .accept(MediaType.APPLICATION_JSON))
+        .andExpect(resultMatcher)
+        .andReturn().getResponse().getContentAsString();
   }
 }
