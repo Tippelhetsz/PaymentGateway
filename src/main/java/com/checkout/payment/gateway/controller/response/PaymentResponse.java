@@ -3,7 +3,6 @@ package com.checkout.payment.gateway.controller.response;
 import com.checkout.payment.gateway.enums.PaymentStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-
 import java.util.UUID;
 
 @JsonPropertyOrder({"id", "status", "card_number_last_four", "expiry_month", "expiry_year", "currency", "amount"})

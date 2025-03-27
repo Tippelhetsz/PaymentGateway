@@ -3,6 +3,9 @@ package com.checkout.payment.gateway.exception;
 import com.checkout.payment.gateway.controller.response.ErrorResponse;
 import com.checkout.payment.gateway.enums.ErrorStatus;
 import jakarta.validation.ValidationException;
+import java.net.ConnectException;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -11,10 +14,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-
-import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.List;
 
 @ControllerAdvice
 public class CommonExceptionHandler {

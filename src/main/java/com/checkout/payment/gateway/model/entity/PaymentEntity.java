@@ -2,10 +2,9 @@ package com.checkout.payment.gateway.model.entity;
 
 import com.checkout.payment.gateway.enums.PaymentState;
 import com.checkout.payment.gateway.enums.PaymentStatus;
+import java.util.UUID;
 import lombok.Builder;
 import lombok.Data;
-
-import java.util.UUID;
 
 @Data
 @Builder(toBuilder = true)

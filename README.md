@@ -98,7 +98,7 @@ should not go any deeper than that. Also, DB entities should not leave the Repos
 passed around in the business logic. I was thinking of separating the logic even more, and having separate classes for
 creating and fetching Payments and then the `PaymentGatewayService` would only map from request to a DTO, and call the 
 appropriate class to fulfill the request, and then map back from DTO to response. But given the scope of the task, it felt
-a like overkill, and even now our service class is quite small and easy to read and maintain.
+like overkill, and even now our service class is quite small and easy to read and maintain.
 
 ## Testing
 I separated the testing of the creation and fetching of Payment into their own test classes, and made them extend a base

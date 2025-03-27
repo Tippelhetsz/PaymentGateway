@@ -2,7 +2,6 @@ package com.checkout.payment.gateway.controller.response;
 
 import com.checkout.payment.gateway.enums.ErrorStatus;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.List;
 
 public record ErrorResponse(
