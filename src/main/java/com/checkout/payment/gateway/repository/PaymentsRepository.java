@@ -1,6 +1,7 @@
 package com.checkout.payment.gateway.repository;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -22,9 +23,13 @@ public class PaymentsRepository {
     payments.put(payment.getId(), payment);
   }
 
-  public PaymentDto get(UUID id) {
+  public PaymentDto getById(UUID id) {
     return paymentMapper.mapToDto(Optional.ofNullable(payments.get(id))
             .orElseThrow(() -> new PaymentNotFoundException("Invalid ID")));
+  }
+
+  public List<PaymentDto> getAll() {
+    return payments.values().stream().map(paymentMapper::mapToDto).toList();
   }
 
   public PaymentDto save(PaymentDto payment) {

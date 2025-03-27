@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -30,7 +31,12 @@ public class PaymentGatewayService {
 
   public PaymentResponse getPaymentById(UUID id) {
     LOG.debug("Requesting access to to payment with ID {}", id);
-    return paymentMapper.mapToPaymentResponse(paymentsRepository.get(id));
+    return paymentMapper.mapToPaymentResponse(paymentsRepository.getById(id));
+  }
+
+  public List<PaymentResponse> getAllPayments() {
+    LOG.debug("Fetching all payments");
+    return paymentsRepository.getAll().stream().map(paymentMapper::mapToPaymentResponse).toList();
   }
 
   public PaymentResponse processPayment(PostPaymentRequest paymentRequest) {
